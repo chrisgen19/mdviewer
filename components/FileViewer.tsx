@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Hash, Clock } from 'lucide-react';
 import { FileNode } from '@/lib/mockData';
 import { MarkdownRenderer } from './MarkdownRenderer';
@@ -29,6 +29,7 @@ function generateHeadingId(text: string): string {
 
 export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName, darkMode = false, onNavigateUp }) => {
   const [activeHeading, setActiveHeading] = useState<string>('');
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Extract headings from markdown content
   const headings = useMemo(() => {
@@ -46,6 +47,49 @@ export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName,
     });
   }, [currentFile.content]);
 
+  // Scroll spy: detect which heading is currently visible
+  useEffect(() => {
+    // Find the scrollable parent container
+    const scrollContainer = containerRef.current?.closest('.overflow-y-auto');
+    if (!scrollContainer) return;
+
+    const handleScroll = () => {
+      const scrollTop = scrollContainer.scrollTop;
+      const containerTop = scrollContainer.getBoundingClientRect().top;
+
+      // Find the current heading based on scroll position
+      for (let i = headings.length - 1; i >= 0; i--) {
+        const heading = headings[i];
+        const element = document.getElementById(heading.id);
+
+        if (element) {
+          const elementTop = element.getBoundingClientRect().top;
+          const relativeTop = elementTop - containerTop;
+
+          // Check if heading is in view (with some offset)
+          if (relativeTop <= 150) {
+            setActiveHeading(heading.id);
+            return;
+          }
+        }
+      }
+
+      // If scrolled to top, set first heading or clear
+      if (scrollTop < 50 && headings.length > 0) {
+        setActiveHeading(headings[0].id);
+      }
+    };
+
+    // Add scroll listener to the scrollable container
+    scrollContainer.addEventListener('scroll', handleScroll);
+    // Initial check
+    handleScroll();
+
+    return () => {
+      scrollContainer.removeEventListener('scroll', handleScroll);
+    };
+  }, [headings]);
+
   const scrollToHeading = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -55,7 +99,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName,
   };
 
   return (
-    <div className="max-w-6xl mx-auto animate-fadeIn">
+    <div ref={containerRef} className="max-w-6xl mx-auto animate-fadeIn">
       <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-800">
         <button
           onClick={onNavigateUp}
