@@ -23,6 +23,84 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, dar
   while (i < lines.length) {
     const line = lines[i];
 
+    // Handle tables
+    if (line.trim().match(/^\|(.+)\|$/)) {
+      const tableLines: string[] = [];
+      let tableIndex = i;
+
+      // Collect all table lines
+      while (tableIndex < lines.length && lines[tableIndex].trim().match(/^\|(.+)\|$/)) {
+        tableLines.push(lines[tableIndex]);
+        tableIndex++;
+      }
+
+      if (tableLines.length >= 2) {
+        // Parse header
+        const headerCells = tableLines[0]
+          .split('|')
+          .slice(1, -1)
+          .map(cell => cell.trim());
+
+        // Parse alignment from separator row
+        const alignments = tableLines[1]
+          .split('|')
+          .slice(1, -1)
+          .map(cell => {
+            const trimmed = cell.trim();
+            if (trimmed.startsWith(':') && trimmed.endsWith(':')) return 'center';
+            if (trimmed.endsWith(':')) return 'right';
+            if (trimmed.startsWith(':')) return 'left';
+            return 'left';
+          });
+
+        // Parse body rows (skip header and separator)
+        const bodyRows = tableLines.slice(2).map(row =>
+          row
+            .split('|')
+            .slice(1, -1)
+            .map(cell => cell.trim())
+        );
+
+        elements.push(
+          <div key={i} className="my-4 overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  {headerCells.map((header, idx) => (
+                    <th
+                      key={idx}
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700"
+                      style={{ textAlign: alignments[idx] as any }}
+                    >
+                      {formatInlineStyles(header)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                {bodyRows.map((row, rowIdx) => (
+                  <tr key={rowIdx} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    {row.map((cell, cellIdx) => (
+                      <td
+                        key={cellIdx}
+                        className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700"
+                        style={{ textAlign: alignments[cellIdx] as any }}
+                      >
+                        {formatInlineStyles(cell)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+
+        i = tableIndex;
+        continue;
+      }
+    }
+
     // Handle code blocks
     if (line.trim().startsWith('```')) {
       if (!inCodeBlock) {
