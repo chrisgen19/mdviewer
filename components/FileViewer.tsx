@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { ArrowLeft, Hash, Clock } from 'lucide-react';
 import { FileNode } from '@/lib/mockData';
 import { MarkdownRenderer } from './MarkdownRenderer';
@@ -10,7 +10,39 @@ interface FileViewerProps {
   onNavigateUp: () => void;
 }
 
+interface Heading {
+  text: string;
+  level: number;
+  id: string;
+}
+
 export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName, darkMode = false, onNavigateUp }) => {
+  const [activeHeading, setActiveHeading] = useState<string>('');
+
+  // Extract headings from markdown content
+  const headings = useMemo(() => {
+    if (!currentFile.content) return [];
+
+    const headingRegex = /^(#{1,3})\s+(.+)$/gm;
+    const matches = [...currentFile.content.matchAll(headingRegex)];
+
+    return matches.map((match, index) => {
+      const level = match[1].length;
+      const text = match[2];
+      const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+
+      return { text, level, id };
+    });
+  }, [currentFile.content]);
+
+  const scrollToHeading = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveHeading(id);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto animate-fadeIn">
       <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-800">
@@ -45,20 +77,26 @@ export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName,
         <div className="hidden xl:block w-64 flex-shrink-0">
           <div className="sticky top-0">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">On this page</h3>
-            <ul className="space-y-2 border-l border-gray-200 dark:border-gray-800">
-              {['Introduction', 'Usage', 'Configuration'].map((item, i) => (
-                <li
-                  key={i}
-                  className={`pl-4 text-sm cursor-pointer border-l-2 transition-colors -ml-[2px] ${
-                    i === 0
-                      ? 'border-blue-500 text-blue-600 font-medium'
-                      : 'border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300'
-                  }`}
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
+            {headings.length > 0 ? (
+              <ul className="space-y-2 border-l border-gray-200 dark:border-gray-800">
+                {headings.map((heading) => (
+                  <li
+                    key={heading.id}
+                    onClick={() => scrollToHeading(heading.id)}
+                    className={`text-sm cursor-pointer border-l-2 transition-colors -ml-[2px] ${
+                      activeHeading === heading.id
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400 font-medium'
+                        : 'border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300'
+                    }`}
+                    style={{ paddingLeft: `${(heading.level - 1) * 8 + 16}px` }}
+                  >
+                    {heading.text}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-gray-400">No headings</p>
+            )}
           </div>
         </div>
       </div>

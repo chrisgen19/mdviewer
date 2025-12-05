@@ -84,27 +84,35 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, dar
 
     // Handle headers
     if (line.startsWith('# ')) {
+      const text = line.replace('# ', '');
+      const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
       elements.push(
-        <h1 key={i} className="text-3xl font-bold text-gray-900 dark:text-white pb-4 border-b border-gray-200 dark:border-gray-800 mt-8 mb-4 first:mt-0">
-          {line.replace('# ', '')}
+        <h1 key={i} id={id} className="text-3xl font-bold text-gray-900 dark:text-white pb-4 border-b border-gray-200 dark:border-gray-800 mt-8 mb-4 first:mt-0 scroll-mt-6">
+          {text}
         </h1>
       );
     } else if (line.startsWith('## ')) {
+      const text = line.replace('## ', '');
+      const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
       elements.push(
-        <h2 key={i} className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-6 mb-3">
-          {line.replace('## ', '')}
+        <h2 key={i} id={id} className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-6 mb-3 scroll-mt-6">
+          {text}
         </h2>
       );
     } else if (line.startsWith('### ')) {
+      const text = line.replace('### ', '');
+      const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
       elements.push(
-        <h3 key={i} className="text-xl font-semibold text-gray-800 dark:text-gray-100 mt-5 mb-2">
-          {line.replace('### ', '')}
+        <h3 key={i} id={id} className="text-xl font-semibold text-gray-800 dark:text-gray-100 mt-5 mb-2 scroll-mt-6">
+          {text}
         </h3>
       );
     } else if (line.startsWith('#### ')) {
+      const text = line.replace('#### ', '');
+      const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
       elements.push(
-        <h4 key={i} className="text-lg font-semibold text-gray-800 dark:text-gray-100 mt-4 mb-2">
-          {line.replace('#### ', '')}
+        <h4 key={i} id={id} className="text-lg font-semibold text-gray-800 dark:text-gray-100 mt-4 mb-2 scroll-mt-6">
+          {text}
         </h4>
       );
     }
