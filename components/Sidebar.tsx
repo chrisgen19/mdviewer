@@ -19,7 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, fileSystem, path, onEn
         <div
           onClick={(e) => {
             e.stopPropagation();
-            if (!isFile) onEntryClick(item);
+            onEntryClick(item);
           }}
           className={`
             group flex items-center gap-2 px-3 py-2 text-sm rounded-md cursor-pointer mb-1 transition-all duration-200
