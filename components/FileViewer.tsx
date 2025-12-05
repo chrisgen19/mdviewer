@@ -6,10 +6,11 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 interface FileViewerProps {
   currentFile: FileNode;
   parentName: string;
+  darkMode?: boolean;
   onNavigateUp: () => void;
 }
 
-export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName, onNavigateUp }) => {
+export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName, darkMode = false, onNavigateUp }) => {
   return (
     <div className="max-w-4xl mx-auto animate-fadeIn">
       <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-800">
@@ -37,7 +38,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName,
       <div className="flex gap-8 relative">
         <div className="flex-1 min-h-[500px] bg-white dark:bg-gray-950">
           <article className="prose prose-slate dark:prose-invert max-w-none">
-            <MarkdownRenderer content={currentFile.content || ''} />
+            <MarkdownRenderer content={currentFile.content || ''} darkMode={darkMode} />
           </article>
         </div>
 

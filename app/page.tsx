@@ -153,6 +153,7 @@ export default function Home() {
               <FileViewer
                 currentFile={currentFolder}
                 parentName={path[path.length - 2]?.name || 'Docs'}
+                darkMode={darkMode}
                 onNavigateUp={navigateUp}
               />
             ) : (
