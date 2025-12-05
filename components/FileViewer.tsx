@@ -16,6 +16,17 @@ interface Heading {
   id: string;
 }
 
+// Helper function to generate heading IDs like GitHub does
+function generateHeadingId(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+}
+
 export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName, darkMode = false, onNavigateUp }) => {
   const [activeHeading, setActiveHeading] = useState<string>('');
 
@@ -29,7 +40,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName,
     return matches.map((match, index) => {
       const level = match[1].length;
       const text = match[2];
-      const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      const id = generateHeadingId(text);
 
       return { text, level, id };
     });
@@ -44,7 +55,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName,
   };
 
   return (
-    <div className="max-w-4xl mx-auto animate-fadeIn">
+    <div className="max-w-6xl mx-auto animate-fadeIn">
       <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-800">
         <button
           onClick={onNavigateUp}
@@ -68,7 +79,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ currentFile, parentName,
       </div>
 
       <div className="flex gap-8 relative">
-        <div className="flex-1 min-h-[500px] bg-white dark:bg-gray-950">
+        <div className="flex-1 min-h-[500px] bg-white dark:bg-gray-950 min-w-0 overflow-hidden">
           <article className="prose prose-slate dark:prose-invert max-w-none">
             <MarkdownRenderer content={currentFile.content || ''} darkMode={darkMode} />
           </article>

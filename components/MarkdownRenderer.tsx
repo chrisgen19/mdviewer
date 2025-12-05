@@ -36,7 +36,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, dar
         const codeContent = codeBlockLines.join('\n');
 
         elements.push(
-          <div key={i} className="my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div key={i} className="my-4 rounded-lg overflow-x-auto border border-gray-200 dark:border-gray-700 shadow-sm">
             {codeLanguage && (
               <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <span className="uppercase tracking-wide">{codeLanguage}</span>
@@ -85,7 +85,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, dar
     // Handle headers
     if (line.startsWith('# ')) {
       const text = line.replace('# ', '');
-      const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      const id = generateHeadingId(text);
       elements.push(
         <h1 key={i} id={id} className="text-3xl font-bold text-gray-900 dark:text-white pb-4 border-b border-gray-200 dark:border-gray-800 mt-8 mb-4 first:mt-0 scroll-mt-6">
           {text}
@@ -93,7 +93,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, dar
       );
     } else if (line.startsWith('## ')) {
       const text = line.replace('## ', '');
-      const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      const id = generateHeadingId(text);
       elements.push(
         <h2 key={i} id={id} className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-6 mb-3 scroll-mt-6">
           {text}
@@ -101,7 +101,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, dar
       );
     } else if (line.startsWith('### ')) {
       const text = line.replace('### ', '');
-      const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      const id = generateHeadingId(text);
       elements.push(
         <h3 key={i} id={id} className="text-xl font-semibold text-gray-800 dark:text-gray-100 mt-5 mb-2 scroll-mt-6">
           {text}
@@ -109,7 +109,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, dar
       );
     } else if (line.startsWith('#### ')) {
       const text = line.replace('#### ', '');
-      const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      const id = generateHeadingId(text);
       elements.push(
         <h4 key={i} id={id} className="text-lg font-semibold text-gray-800 dark:text-gray-100 mt-4 mb-2 scroll-mt-6">
           {text}
@@ -180,15 +180,25 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, dar
   return <div className="space-y-1">{elements}</div>;
 };
 
+// Helper function to generate heading IDs like GitHub does
+function generateHeadingId(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+}
+
 // Helper function to format inline styles (bold, italic, code, links)
 function formatInlineStyles(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
-  let currentText = text;
   let key = 0;
 
   // Handle inline code first
   const codeRegex = /`([^`]+)`/g;
-  const codeParts = currentText.split(codeRegex);
+  const codeParts = text.split(codeRegex);
 
   codeParts.forEach((part, idx) => {
     if (idx % 2 === 1) {
@@ -199,19 +209,70 @@ function formatInlineStyles(text: string): React.ReactNode[] {
         </code>
       );
     } else {
-      // Handle bold
-      const boldParts = part.split(/\*\*(.+?)\*\*/g);
-      boldParts.forEach((boldPart, boldIdx) => {
-        if (boldIdx % 2 === 1) {
-          parts.push(<strong key={`bold-${key++}`} className="font-bold">{boldPart}</strong>);
-        } else if (boldPart) {
-          // Handle italic
-          const italicParts = boldPart.split(/\*(.+?)\*/g);
-          italicParts.forEach((italicPart, italicIdx) => {
-            if (italicIdx % 2 === 1) {
-              parts.push(<em key={`italic-${key++}`} className="italic">{italicPart}</em>);
-            } else if (italicPart) {
-              parts.push(<span key={`text-${key++}`}>{italicPart}</span>);
+      // Handle links [text](url)
+      const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+      const linkParts = part.split(linkRegex);
+
+      linkParts.forEach((linkPart, linkIdx) => {
+        // Pattern: [normal text, link text, link url, normal text, link text, link url, ...]
+        if (linkIdx % 3 === 1) {
+          // This is link text
+          const linkText = linkPart;
+          const linkUrl = linkParts[linkIdx + 1];
+          const isAnchorLink = linkUrl.startsWith('#');
+          const isExternalLink = linkUrl.startsWith('http://') || linkUrl.startsWith('https://');
+
+          if (isAnchorLink) {
+            // Handle internal anchor links with smooth scroll
+            parts.push(
+              <a
+                key={`link-${key++}`}
+                href={linkUrl}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const targetId = linkUrl.substring(1);
+                  const element = document.getElementById(targetId);
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
+                className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+              >
+                {linkText}
+              </a>
+            );
+          } else {
+            // Handle external links
+            parts.push(
+              <a
+                key={`link-${key++}`}
+                href={linkUrl}
+                target={isExternalLink ? "_blank" : undefined}
+                rel={isExternalLink ? "noopener noreferrer" : undefined}
+                className="text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                {linkText}
+              </a>
+            );
+          }
+        } else if (linkIdx % 3 === 2) {
+          // Skip - this is the URL part, already handled
+        } else if (linkPart) {
+          // Handle bold
+          const boldParts = linkPart.split(/\*\*(.+?)\*\*/g);
+          boldParts.forEach((boldPart, boldIdx) => {
+            if (boldIdx % 2 === 1) {
+              parts.push(<strong key={`bold-${key++}`} className="font-bold">{boldPart}</strong>);
+            } else if (boldPart) {
+              // Handle italic
+              const italicParts = boldPart.split(/\*(.+?)\*/g);
+              italicParts.forEach((italicPart, italicIdx) => {
+                if (italicIdx % 2 === 1) {
+                  parts.push(<em key={`italic-${key++}`} className="italic">{italicPart}</em>);
+                } else if (italicPart) {
+                  parts.push(<span key={`text-${key++}`}>{italicPart}</span>);
+                }
+              });
             }
           });
         }
