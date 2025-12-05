@@ -9,10 +9,27 @@ import { FileNode } from '@/lib/mockData';
 
 export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [path, setPath] = useState<FileNode[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [fileSystem, setFileSystem] = useState<FileNode | null>(null);
+
+  // Load dark mode preference from localStorage on mount
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem('darkMode');
+    if (saved !== null) {
+      setDarkMode(saved === 'true');
+    }
+  }, []);
+
+  // Save dark mode preference to localStorage whenever it changes
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem('darkMode', darkMode.toString());
+    }
+  }, [darkMode, mounted]);
 
   // Load initial file system
   useEffect(() => {
@@ -80,14 +97,17 @@ export default function Home() {
 
   const currentFolder = path[path.length - 1];
 
+  // Prevent flash by not rendering until mounted
+  if (!mounted) {
+    return null;
+  }
+
   if (loading || !fileSystem) {
     return (
-      <div className={`h-screen w-full flex items-center justify-center font-sans ${darkMode ? 'dark' : ''}`}>
-        <div className="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading files...</p>
-          </div>
+      <div className={`h-screen w-full flex items-center justify-center font-sans bg-white dark:bg-gray-950 ${darkMode ? 'dark' : ''}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading files...</p>
         </div>
       </div>
     );
