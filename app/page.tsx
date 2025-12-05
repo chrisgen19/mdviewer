@@ -70,18 +70,44 @@ export default function Home() {
     }
   };
 
+  // Helper function to find the full path to a node
+  const findPathToNode = (targetNode: FileNode, currentNode: FileNode = fileSystem!, currentPath: FileNode[] = []): FileNode[] | null => {
+    const newPath = [...currentPath, currentNode];
+
+    if (currentNode.id === targetNode.id) {
+      return newPath;
+    }
+
+    if (currentNode.children) {
+      for (const child of currentNode.children) {
+        const foundPath = findPathToNode(targetNode, child, newPath);
+        if (foundPath) {
+          return foundPath;
+        }
+      }
+    }
+
+    return null;
+  };
+
   const handleEntryClick = async (entry: FileNode) => {
+    // Find the full path from root to this entry
+    const fullPath = findPathToNode(entry);
+
+    if (!fullPath) {
+      console.error('Could not find path to node');
+      return;
+    }
+
     if (entry.type === 'file') {
       // Load file content if not already loaded
       if (!entry.content) {
         const content = await loadFileContent(entry.path);
         entry.content = content;
       }
-      setPath([...path, entry]);
-    } else {
-      // Navigate into folder
-      setPath([...path, entry]);
     }
+
+    setPath(fullPath);
   };
 
   const handleBreadcrumbClick = (index: number) => {

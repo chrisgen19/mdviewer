@@ -12,7 +12,9 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, fileSystem, path, onEntryClick }) => {
   const renderSidebarItem = (item: FileNode, depth = 0): React.ReactNode => {
     const isFile = item.type === 'file';
-    const isActive = path.find(p => p.id === item.id);
+    // Check if this item is the currently active one (last in path)
+    const currentItem = path[path.length - 1];
+    const isActive = currentItem?.id === item.id;
 
     return (
       <div key={item.id}>
