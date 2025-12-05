@@ -49,9 +49,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, fileSystem, path, onEn
   return (
     <aside
       className={`
-        ${isOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full opacity-0'}
+        ${isOpen ? 'w-64' : 'w-0 md:w-0'}
+        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         fixed md:relative z-20 h-full flex-shrink-0 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800
-        transition-all duration-300 ease-in-out flex flex-col
+        transition-all duration-300 ease-in-out flex flex-col overflow-hidden
       `}
     >
       <div className="h-14 flex items-center px-4 border-b border-gray-200 dark:border-gray-800">

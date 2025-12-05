@@ -115,7 +115,15 @@ export default function Home() {
 
   return (
     <div className={`h-screen w-full flex overflow-hidden font-sans ${darkMode ? 'dark' : ''}`}>
-      <div className="flex w-full bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+      <div className="flex w-full bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 relative">
+        {/* Mobile overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-10 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         <Sidebar
           isOpen={sidebarOpen}
           fileSystem={fileSystem}

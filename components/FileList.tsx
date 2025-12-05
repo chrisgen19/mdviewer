@@ -11,7 +11,7 @@ interface FileListProps {
 
 export const FileList: React.FC<FileListProps> = ({ currentFolder, path, onEntryClick, onNavigateUp }) => {
   return (
-    <div className="max-w-5xl mx-auto animate-fadeIn">
+    <div className="max-w-6xl mx-auto animate-fadeIn">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
           <Folder className="text-blue-500" />
